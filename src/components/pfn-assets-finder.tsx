@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, Copy, Loader2, Shield, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -90,7 +90,7 @@ export function PfnAssetsFinder() {
     setLoggedIn(Boolean(data.authenticated));
   }
 
-  useMemo(() => {
+  useEffect(() => {
     void checkStatus();
   }, []);
 
