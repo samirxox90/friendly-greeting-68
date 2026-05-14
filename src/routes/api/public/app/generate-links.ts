@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { checkLinks, generateLinks, generateLinksInputSchema } from "@/lib/assets.server";
-import { getSessionFromRequest } from "@/lib/session.server";
+import { inspectSessionFromRequest, logSessionDebug } from "@/lib/session.server";
 import { jsonResponse } from "@/lib/http.server";
 
 const schema = z.object({
@@ -13,8 +13,11 @@ export const Route = createFileRoute("/api/public/app/generate-links")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const authorized = getSessionFromRequest(request, "main");
-        if (!authorized) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+        const sessionDebug = inspectSessionFromRequest(request, "main");
+        if (!sessionDebug.authenticated) {
+          logSessionDebug(request, "app/generate-links unauthorized", sessionDebug);
+          return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+        }
 
         const parsed = schema.safeParse(await request.json().catch(() => ({})));
         if (!parsed.success) {

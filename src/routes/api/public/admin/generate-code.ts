@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { generateAccessCode } from "@/lib/assets.server";
-import { getSessionFromRequest } from "@/lib/session.server";
+import { inspectSessionFromRequest, logSessionDebug } from "@/lib/session.server";
 import { jsonResponse } from "@/lib/http.server";
 
 const inputSchema = z.object({
@@ -13,7 +13,9 @@ export const Route = createFileRoute("/api/public/admin/generate-code")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        if (!getSessionFromRequest(request, "admin")) {
+        const sessionDebug = inspectSessionFromRequest(request, "admin");
+        if (!sessionDebug.authenticated) {
+          logSessionDebug(request, "admin/generate-code unauthorized", sessionDebug);
           return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
         }
 

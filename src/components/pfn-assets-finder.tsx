@@ -85,7 +85,7 @@ export function PfnAssetsFinder() {
   const wordsPreview = useMemo(() => toWords(mode, singleWord, multipleWords), [mode, singleWord, multipleWords]);
 
   async function checkStatus() {
-    const res = await fetch("/api/public/app/status");
+    const res = await fetch("/api/public/app/status", { credentials: "include" });
     const data = (await res.json()) as { authenticated: boolean };
     setLoggedIn(Boolean(data.authenticated));
   }
@@ -101,6 +101,7 @@ export function PfnAssetsFinder() {
     try {
       const res = await fetch("/api/public/app/login", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
       });
@@ -121,7 +122,7 @@ export function PfnAssetsFinder() {
   }
 
   async function handleLogout() {
-    await fetch("/api/public/app/logout", { method: "POST" });
+    await fetch("/api/public/app/logout", { method: "POST", credentials: "include" });
     setLoggedIn(false);
   }
 
@@ -162,6 +163,7 @@ export function PfnAssetsFinder() {
     try {
       const res = await fetch("/api/public/app/generate-links", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           checkLinks: linkCheckEnabled,

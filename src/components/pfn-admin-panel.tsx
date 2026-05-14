@@ -33,6 +33,8 @@ export function PfnAdminPanel() {
   const [ok, setOk] = useState(false);
   const [pwd, setPwd] = useState("");
   const [err, setErr] = useState("");
+  const [panelMessage, setPanelMessage] = useState("");
+  const [panelError, setPanelError] = useState("");
   const [mainPassword, setMainPassword] = useState("lofat");
   const [adminPassword, setAdminPassword] = useState("lofaf");
   const [patterns, setPatterns] = useState<Pattern[]>([]);
@@ -42,9 +44,15 @@ export function PfnAdminPanel() {
   const [generatedCode, setGeneratedCode] = useState("");
 
   async function fetchConfig() {
-    const res = await fetch("/api/public/admin/config");
+    const res = await fetch("/api/public/admin/config", { credentials: "include" });
     const data = await res.json();
-    if (!res.ok || !data.ok) return;
+    if (!res.ok || !data.ok) {
+      setPanelError(data.error ?? "Unable to load admin config.");
+      if (res.status === 401) setOk(false);
+      return;
+    }
+
+    setPanelError("");
     setMainPassword(data.settings.main_access?.password ?? "lofat");
     setAdminPassword(data.settings.admin_access?.password ?? "lofaf");
     setPatterns(data.patterns ?? []);
@@ -52,7 +60,7 @@ export function PfnAdminPanel() {
   }
 
   useEffect(() => {
-    fetch("/api/public/admin/status")
+    fetch("/api/public/admin/status", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         if (data.authenticated) {
@@ -64,8 +72,11 @@ export function PfnAdminPanel() {
 
   async function login() {
     setErr("");
+    setPanelError("");
+    setPanelMessage("");
     const res = await fetch("/api/public/admin/login", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password: pwd }),
     });
@@ -80,22 +91,46 @@ export function PfnAdminPanel() {
   }
 
   async function save() {
-    await fetch("/api/public/admin/config", {
+    setPanelError("");
+    setPanelMessage("");
+    const res = await fetch("/api/public/admin/config", {
       method: "PUT",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ mainPassword, adminPassword, patterns, templates }),
     });
+    const data = await res.json().catch(() => ({ ok: false, error: "Save failed." }));
+
+    if (!res.ok || !data.ok) {
+      setPanelError(data.error ?? "Save failed.");
+      if (res.status === 401) setOk(false);
+      return;
+    }
+
+    setPanelMessage("Saved successfully.");
     void fetchConfig();
   }
 
   async function makeCode() {
+    setPanelError("");
+    setPanelMessage("");
     const res = await fetch("/api/public/admin/generate-code", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ scope: codeScope, durationMs: duration }),
     });
     const data = await res.json();
-    if (res.ok && data.ok) setGeneratedCode(`${data.code} (expires ${data.expiresAt})`);
+
+    if (!res.ok || !data.ok) {
+      setGeneratedCode("");
+      setPanelError(data.error ?? "Failed to generate code.");
+      if (res.status === 401) setOk(false);
+      return;
+    }
+
+    setGeneratedCode(`${data.code} (expires ${data.expiresAt})`);
+    setPanelMessage("Access code generated.");
   }
 
   function addTemplate() {
@@ -130,6 +165,8 @@ export function PfnAdminPanel() {
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-6">
       <h1 className="mb-4 text-3xl font-semibold">PFN Admin Panel</h1>
+      {panelError ? <p className="mb-3 text-sm text-destructive">{panelError}</p> : null}
+      {panelMessage ? <p className="mb-3 text-sm text-primary">{panelMessage}</p> : null}
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="surface-panel rounded-lg">
           <CardHeader>
