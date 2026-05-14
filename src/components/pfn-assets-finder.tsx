@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Copy, Loader2, Shield, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type EventType = "TW" | "FW" | "DW" | "O" | "MS" | "STORE";
@@ -81,8 +82,39 @@ export function PfnAssetsFinder() {
   const [results, setResults] = useState<LinkItem[]>([]);
   const [copied, setCopied] = useState(false);
   const [errorText, setErrorText] = useState("");
+  const [checkingMessage, setCheckingMessage] = useState("");
+  const [checkingProgress, setCheckingProgress] = useState(0);
+
+  const generateAbortRef = useRef<AbortController | null>(null);
+  const progressTimerRef = useRef<number | null>(null);
 
   const wordsPreview = useMemo(() => toWords(mode, singleWord, multipleWords), [mode, singleWord, multipleWords]);
+  const visibleResults = useMemo(
+    () => results.filter((item) => (typeof item.check?.ok === "boolean" ? item.check.ok : true)),
+    [results],
+  );
+
+  function clearProgressTimer() {
+    if (progressTimerRef.current) {
+      window.clearInterval(progressTimerRef.current);
+      progressTimerRef.current = null;
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      clearProgressTimer();
+      generateAbortRef.current?.abort();
+    };
+  }, []);
+
+  function resetResults() {
+    setResults([]);
+    setCopied(false);
+    setErrorText("");
+    setCheckingMessage("");
+    setCheckingProgress(0);
+  }
 
   async function checkStatus() {
     const res = await fetch("/api/public/app/status", { credentials: "include" });
@@ -158,12 +190,23 @@ export function PfnAssetsFinder() {
     }
 
     setErrorText("");
+    setCheckingMessage(linkCheckEnabled ? "Checking links live..." : "Generating links...");
+    setCheckingProgress(8);
     setLoading(true);
+    clearProgressTimer();
+
+    progressTimerRef.current = window.setInterval(() => {
+      setCheckingProgress((prev) => (prev >= 92 ? prev : prev + 4));
+    }, 260);
+
+    const controller = new AbortController();
+    generateAbortRef.current = controller;
 
     try {
       const res = await fetch("/api/public/app/generate-links", {
         method: "POST",
         credentials: "include",
+        signal: controller.signal,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           checkLinks: linkCheckEnabled,
@@ -178,20 +221,44 @@ export function PfnAssetsFinder() {
 
       const data = (await res.json()) as { ok: boolean; error?: string; links?: LinkItem[] };
       if (!res.ok || !data.ok) {
+        clearProgressTimer();
+        setCheckingProgress(0);
+        setCheckingMessage("");
         setErrorText(data.error ?? "Generation failed");
         return;
       }
 
       setResults(data.links ?? []);
+      clearProgressTimer();
+      setCheckingProgress(100);
+      setCheckingMessage("Live checking complete.");
+      window.setTimeout(() => {
+        setCheckingMessage("");
+        setCheckingProgress(0);
+      }, 1000);
     } catch {
+      clearProgressTimer();
+      const wasCancelled = controller.signal.aborted;
+      if (wasCancelled) {
+        setCheckingProgress(0);
+        setCheckingMessage("Generation cancelled.");
+        return;
+      }
+      setCheckingProgress(0);
+      setCheckingMessage("");
       setErrorText("Network error while generating links.");
     } finally {
+      generateAbortRef.current = null;
       setLoading(false);
     }
   }
 
+  function cancelGenerate() {
+    generateAbortRef.current?.abort();
+  }
+
   async function copyAll() {
-    const text = results.map((item) => item.url).join("\n");
+    const text = visibleResults.map((item) => item.url).join("\n");
     await navigator.clipboard.writeText(text);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1400);
@@ -236,7 +303,7 @@ export function PfnAssetsFinder() {
     <main className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 md:py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">PFN Assets Finder</h1>
+          <h1 className="ff-title text-3xl font-semibold tracking-tight text-foreground md:text-4xl">FF Assets Finder</h1>
           <p className="text-sm text-muted-foreground">Generate working links with image previews, fast.</p>
         </div>
         <div className="flex gap-2">
@@ -359,6 +426,9 @@ export function PfnAssetsFinder() {
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               Generate Links
             </Button>
+            <Button onClick={cancelGenerate} disabled={!loading} variant="outline" className="w-full">
+              Cancel Generate
+            </Button>
           </CardContent>
         </Card>
 
@@ -366,14 +436,19 @@ export function PfnAssetsFinder() {
           <CardHeader>
             <CardTitle>Result Snapshot</CardTitle>
             <CardDescription>
-              Words: {wordsPreview.length} · Results: {results.length}
+              Words: {wordsPreview.length} · Working Results: {visibleResults.length}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button variant="secondary" onClick={copyAll} disabled={results.length === 0} className="w-full">
+            <Button variant="secondary" onClick={copyAll} disabled={visibleResults.length === 0} className="w-full">
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? "Copied" : "Copy All Links"}
+              {copied ? "Copied" : "Copy Working Links"}
             </Button>
+            <Button variant="outline" onClick={resetResults} disabled={results.length === 0} className="w-full">
+              Reset Results
+            </Button>
+            {checkingProgress > 0 ? <Progress value={checkingProgress} /> : null}
+            {checkingMessage ? <p className="text-xs text-primary">{checkingMessage}</p> : null}
             <p className="text-xs text-muted-foreground">
               Previews and status are shown below. Green = reachable.
             </p>
@@ -382,7 +457,7 @@ export function PfnAssetsFinder() {
       </div>
 
       <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {results.map((item) => (
+        {visibleResults.map((item) => (
           <Card key={item.id} className="surface-panel rounded-lg border-border/60">
             <CardHeader className="space-y-1 pb-3">
               <CardTitle className="text-base">
@@ -398,7 +473,7 @@ export function PfnAssetsFinder() {
                 src={item.url}
                 alt={`${item.region} ${item.eventType} ${item.label}`}
                 loading="lazy"
-                className="h-32 w-full rounded-md border border-border object-cover"
+                className="h-56 w-full rounded-md border border-border bg-muted/30 p-1 object-contain"
               />
               <a
                 href={item.url}
@@ -415,6 +490,13 @@ export function PfnAssetsFinder() {
             </CardContent>
           </Card>
         ))}
+        {results.length > 0 && visibleResults.length === 0 ? (
+          <Card className="surface-panel rounded-lg border-border/60 md:col-span-2 xl:col-span-3">
+            <CardContent className="py-8 text-center text-sm text-muted-foreground">
+              No working links found for this run.
+            </CardContent>
+          </Card>
+        ) : null}
       </section>
     </main>
   );
