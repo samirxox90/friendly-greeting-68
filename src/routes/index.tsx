@@ -1,26 +1,22 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { PfnAssetsFinder } from "@/components/pfn-assets-finder";
 
 export const Route = createFileRoute("/")({
-  component: Index,
+  component: IndexRoute,
 });
 
-// IMPORTANT: Replace this placeholder. For sites with multiple pages (About, Services, Contact, etc.),
-// create separate route files (about.tsx, services.tsx, contact.tsx) — don't put all pages in this file.
-function PlaceholderIndex() {
+function IndexRoute() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <>
+      <div className="mx-auto flex w-full max-w-7xl justify-end px-4 pt-4 md:px-6">
+        <Link
+          to="/admin"
+          className="rounded-md border border-input bg-secondary px-3 py-1.5 text-sm font-medium text-secondary-foreground hover:bg-accent"
+        >
+          Open Admin
+        </Link>
+      </div>
+      <PfnAssetsFinder />
+    </>
   );
-}
-
-function Index() {
-  return <PlaceholderIndex />;
 }

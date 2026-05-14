@@ -9,38 +9,201 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicAppStatusRouteImport } from './routes/api/public/app/status'
+import { Route as ApiPublicAppLogoutRouteImport } from './routes/api/public/app/logout'
+import { Route as ApiPublicAppLoginRouteImport } from './routes/api/public/app/login'
+import { Route as ApiPublicAppGenerateLinksRouteImport } from './routes/api/public/app/generate-links'
+import { Route as ApiPublicAdminStatusRouteImport } from './routes/api/public/admin/status'
+import { Route as ApiPublicAdminLogoutRouteImport } from './routes/api/public/admin/logout'
+import { Route as ApiPublicAdminLoginRouteImport } from './routes/api/public/admin/login'
+import { Route as ApiPublicAdminGenerateCodeRouteImport } from './routes/api/public/admin/generate-code'
+import { Route as ApiPublicAdminConfigRouteImport } from './routes/api/public/admin/config'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAppStatusRoute = ApiPublicAppStatusRouteImport.update({
+  id: '/api/public/app/status',
+  path: '/api/public/app/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAppLogoutRoute = ApiPublicAppLogoutRouteImport.update({
+  id: '/api/public/app/logout',
+  path: '/api/public/app/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAppLoginRoute = ApiPublicAppLoginRouteImport.update({
+  id: '/api/public/app/login',
+  path: '/api/public/app/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAppGenerateLinksRoute =
+  ApiPublicAppGenerateLinksRouteImport.update({
+    id: '/api/public/app/generate-links',
+    path: '/api/public/app/generate-links',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicAdminStatusRoute = ApiPublicAdminStatusRouteImport.update({
+  id: '/api/public/admin/status',
+  path: '/api/public/admin/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAdminLogoutRoute = ApiPublicAdminLogoutRouteImport.update({
+  id: '/api/public/admin/logout',
+  path: '/api/public/admin/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAdminLoginRoute = ApiPublicAdminLoginRouteImport.update({
+  id: '/api/public/admin/login',
+  path: '/api/public/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAdminGenerateCodeRoute =
+  ApiPublicAdminGenerateCodeRouteImport.update({
+    id: '/api/public/admin/generate-code',
+    path: '/api/public/admin/generate-code',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicAdminConfigRoute = ApiPublicAdminConfigRouteImport.update({
+  id: '/api/public/admin/config',
+  path: '/api/public/admin/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/admin/config': typeof ApiPublicAdminConfigRoute
+  '/api/public/admin/generate-code': typeof ApiPublicAdminGenerateCodeRoute
+  '/api/public/admin/login': typeof ApiPublicAdminLoginRoute
+  '/api/public/admin/logout': typeof ApiPublicAdminLogoutRoute
+  '/api/public/admin/status': typeof ApiPublicAdminStatusRoute
+  '/api/public/app/generate-links': typeof ApiPublicAppGenerateLinksRoute
+  '/api/public/app/login': typeof ApiPublicAppLoginRoute
+  '/api/public/app/logout': typeof ApiPublicAppLogoutRoute
+  '/api/public/app/status': typeof ApiPublicAppStatusRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/admin/config': typeof ApiPublicAdminConfigRoute
+  '/api/public/admin/generate-code': typeof ApiPublicAdminGenerateCodeRoute
+  '/api/public/admin/login': typeof ApiPublicAdminLoginRoute
+  '/api/public/admin/logout': typeof ApiPublicAdminLogoutRoute
+  '/api/public/admin/status': typeof ApiPublicAdminStatusRoute
+  '/api/public/app/generate-links': typeof ApiPublicAppGenerateLinksRoute
+  '/api/public/app/login': typeof ApiPublicAppLoginRoute
+  '/api/public/app/logout': typeof ApiPublicAppLogoutRoute
+  '/api/public/app/status': typeof ApiPublicAppStatusRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/admin/config': typeof ApiPublicAdminConfigRoute
+  '/api/public/admin/generate-code': typeof ApiPublicAdminGenerateCodeRoute
+  '/api/public/admin/login': typeof ApiPublicAdminLoginRoute
+  '/api/public/admin/logout': typeof ApiPublicAdminLogoutRoute
+  '/api/public/admin/status': typeof ApiPublicAdminStatusRoute
+  '/api/public/app/generate-links': typeof ApiPublicAppGenerateLinksRoute
+  '/api/public/app/login': typeof ApiPublicAppLoginRoute
+  '/api/public/app/logout': typeof ApiPublicAppLogoutRoute
+  '/api/public/app/status': typeof ApiPublicAppStatusRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/sitemap.xml'
+    | '/api/public/admin/config'
+    | '/api/public/admin/generate-code'
+    | '/api/public/admin/login'
+    | '/api/public/admin/logout'
+    | '/api/public/admin/status'
+    | '/api/public/app/generate-links'
+    | '/api/public/app/login'
+    | '/api/public/app/logout'
+    | '/api/public/app/status'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/admin'
+    | '/sitemap.xml'
+    | '/api/public/admin/config'
+    | '/api/public/admin/generate-code'
+    | '/api/public/admin/login'
+    | '/api/public/admin/logout'
+    | '/api/public/admin/status'
+    | '/api/public/app/generate-links'
+    | '/api/public/app/login'
+    | '/api/public/app/logout'
+    | '/api/public/app/status'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/sitemap.xml'
+    | '/api/public/admin/config'
+    | '/api/public/admin/generate-code'
+    | '/api/public/admin/login'
+    | '/api/public/admin/logout'
+    | '/api/public/admin/status'
+    | '/api/public/app/generate-links'
+    | '/api/public/app/login'
+    | '/api/public/app/logout'
+    | '/api/public/app/status'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiPublicAdminConfigRoute: typeof ApiPublicAdminConfigRoute
+  ApiPublicAdminGenerateCodeRoute: typeof ApiPublicAdminGenerateCodeRoute
+  ApiPublicAdminLoginRoute: typeof ApiPublicAdminLoginRoute
+  ApiPublicAdminLogoutRoute: typeof ApiPublicAdminLogoutRoute
+  ApiPublicAdminStatusRoute: typeof ApiPublicAdminStatusRoute
+  ApiPublicAppGenerateLinksRoute: typeof ApiPublicAppGenerateLinksRoute
+  ApiPublicAppLoginRoute: typeof ApiPublicAppLoginRoute
+  ApiPublicAppLogoutRoute: typeof ApiPublicAppLogoutRoute
+  ApiPublicAppStatusRoute: typeof ApiPublicAppStatusRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +211,86 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/app/status': {
+      id: '/api/public/app/status'
+      path: '/api/public/app/status'
+      fullPath: '/api/public/app/status'
+      preLoaderRoute: typeof ApiPublicAppStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/app/logout': {
+      id: '/api/public/app/logout'
+      path: '/api/public/app/logout'
+      fullPath: '/api/public/app/logout'
+      preLoaderRoute: typeof ApiPublicAppLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/app/login': {
+      id: '/api/public/app/login'
+      path: '/api/public/app/login'
+      fullPath: '/api/public/app/login'
+      preLoaderRoute: typeof ApiPublicAppLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/app/generate-links': {
+      id: '/api/public/app/generate-links'
+      path: '/api/public/app/generate-links'
+      fullPath: '/api/public/app/generate-links'
+      preLoaderRoute: typeof ApiPublicAppGenerateLinksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/admin/status': {
+      id: '/api/public/admin/status'
+      path: '/api/public/admin/status'
+      fullPath: '/api/public/admin/status'
+      preLoaderRoute: typeof ApiPublicAdminStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/admin/logout': {
+      id: '/api/public/admin/logout'
+      path: '/api/public/admin/logout'
+      fullPath: '/api/public/admin/logout'
+      preLoaderRoute: typeof ApiPublicAdminLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/admin/login': {
+      id: '/api/public/admin/login'
+      path: '/api/public/admin/login'
+      fullPath: '/api/public/admin/login'
+      preLoaderRoute: typeof ApiPublicAdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/admin/generate-code': {
+      id: '/api/public/admin/generate-code'
+      path: '/api/public/admin/generate-code'
+      fullPath: '/api/public/admin/generate-code'
+      preLoaderRoute: typeof ApiPublicAdminGenerateCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/admin/config': {
+      id: '/api/public/admin/config'
+      path: '/api/public/admin/config'
+      fullPath: '/api/public/admin/config'
+      preLoaderRoute: typeof ApiPublicAdminConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiPublicAdminConfigRoute: ApiPublicAdminConfigRoute,
+  ApiPublicAdminGenerateCodeRoute: ApiPublicAdminGenerateCodeRoute,
+  ApiPublicAdminLoginRoute: ApiPublicAdminLoginRoute,
+  ApiPublicAdminLogoutRoute: ApiPublicAdminLogoutRoute,
+  ApiPublicAdminStatusRoute: ApiPublicAdminStatusRoute,
+  ApiPublicAppGenerateLinksRoute: ApiPublicAppGenerateLinksRoute,
+  ApiPublicAppLoginRoute: ApiPublicAppLoginRoute,
+  ApiPublicAppLogoutRoute: ApiPublicAppLogoutRoute,
+  ApiPublicAppStatusRoute: ApiPublicAppStatusRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
