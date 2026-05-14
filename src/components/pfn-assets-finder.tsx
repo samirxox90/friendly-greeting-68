@@ -89,7 +89,10 @@ export function PfnAssetsFinder() {
   const progressTimerRef = useRef<number | null>(null);
 
   const wordsPreview = useMemo(() => toWords(mode, singleWord, multipleWords), [mode, singleWord, multipleWords]);
-  const visibleResults = useMemo(() => results.filter((item) => item.check?.ok), [results]);
+  const visibleResults = useMemo(
+    () => results.filter((item) => (typeof item.check?.ok === "boolean" ? item.check.ok : true)),
+    [results],
+  );
 
   function clearProgressTimer() {
     if (progressTimerRef.current) {
@@ -97,6 +100,13 @@ export function PfnAssetsFinder() {
       progressTimerRef.current = null;
     }
   }
+
+  useEffect(() => {
+    return () => {
+      clearProgressTimer();
+      generateAbortRef.current?.abort();
+    };
+  }, []);
 
   function resetResults() {
     setResults([]);
