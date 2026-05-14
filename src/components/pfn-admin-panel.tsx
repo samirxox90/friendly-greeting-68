@@ -2,6 +2,17 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type Pattern = {
   id?: string;
@@ -220,7 +231,25 @@ export function PfnAdminPanel() {
                 <Input value={item.template_word} onChange={(e) => setTemplates((prev) => prev.map((t, i) => i === index ? { ...t, template_word: e.target.value } : t))} />
                 <div className="flex items-center justify-between gap-2 text-sm">
                   <label className="flex items-center gap-2"><input type="checkbox" checked={item.is_active} onChange={(e) => setTemplates((prev) => prev.map((t, i) => i === index ? { ...t, is_active: e.target.checked } : t))} />Active</label>
-                  <Button type="button" variant="destructive" size="sm" onClick={() => removeTemplate(index)}>Delete</Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button type="button" variant="destructive" size="sm">Delete</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete template?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will remove the template word from the list.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => removeTemplate(index)}>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             ))}
@@ -246,7 +275,25 @@ export function PfnAdminPanel() {
                   <Input value={item.pattern} onChange={(e) => setPatterns((prev) => prev.map((p, i) => i === index ? { ...p, pattern: e.target.value } : p))} />
                   <div className="flex items-center justify-between gap-2 text-sm">
                     <label className="flex items-center gap-2"><input type="checkbox" checked={item.is_active} onChange={(e) => setPatterns((prev) => prev.map((p, i) => i === index ? { ...p, is_active: e.target.checked } : p))} />Active</label>
-                    <Button type="button" variant="destructive" size="sm" onClick={() => removePattern(index)}>Delete</Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button type="button" variant="destructive" size="sm">Delete</Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete pattern?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will remove this link pattern from the list.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => removePattern(index)}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               ))}
