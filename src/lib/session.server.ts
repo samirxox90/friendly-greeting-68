@@ -10,6 +10,33 @@ type SessionPayload = {
   exp: number;
 };
 
+type SessionValidationDebug = {
+  scope: SessionScope;
+  cookieName: string;
+  hasCookieHeader: boolean;
+  hasSessionCookie: boolean;
+  hasToken: boolean;
+  hasBody: boolean;
+  hasSignature: boolean;
+  signatureMatches: boolean;
+  payloadValid: boolean;
+  payloadScope: SessionScope | "unknown";
+  scopeMatches: boolean;
+  expiresAtMs: number | null;
+  notExpired: boolean;
+  authenticated: boolean;
+  reason:
+    | "missing_cookie_header"
+    | "missing_session_cookie"
+    | "missing_token"
+    | "invalid_token_format"
+    | "signature_mismatch"
+    | "invalid_payload"
+    | "scope_mismatch"
+    | "expired"
+    | "ok";
+};
+
 function base64UrlEncode(input: string) {
   return Buffer.from(input).toString("base64url");
 }
@@ -83,19 +110,186 @@ export function createSessionCookie(scope: SessionScope, token: string, expiresA
   const isSecure = process.env.NODE_ENV === "production";
   const secure = isSecure ? "; Secure" : "";
   const sameSite = isSecure ? "None" : "Lax";
-  return `${getCookieName(scope)}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=${sameSite}; Expires=${expiresAt.toUTCString()}${secure}`;
+  const partitioned = isSecure ? "; Partitioned" : "";
+  const maxAge = Math.max(0, Math.floor((expiresAt.getTime() - Date.now()) / 1000));
+  return `${getCookieName(scope)}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=${sameSite}; Max-Age=${maxAge}; Expires=${expiresAt.toUTCString()}${secure}${partitioned}`;
 }
 
 export function clearSessionCookie(scope: SessionScope) {
   const isSecure = process.env.NODE_ENV === "production";
   const secure = isSecure ? "; Secure" : "";
   const sameSite = isSecure ? "None" : "Lax";
-  return `${getCookieName(scope)}=; Path=/; HttpOnly; SameSite=${sameSite}; Expires=Thu, 01 Jan 1970 00:00:00 GMT${secure}`;
+  const partitioned = isSecure ? "; Partitioned" : "";
+  return `${getCookieName(scope)}=; Path=/; HttpOnly; SameSite=${sameSite}; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT${secure}${partitioned}`;
+}
+
+export function inspectSessionFromRequest(request: Request, scope: SessionScope): SessionValidationDebug {
+  const cookieHeader = request.headers.get("cookie");
+  const cookies = parseCookieHeader(cookieHeader);
+  const cookieName = getCookieName(scope);
+  const token = cookies.get(cookieName);
+
+  if (!cookieHeader) {
+    return {
+      scope,
+      cookieName,
+      hasCookieHeader: false,
+      hasSessionCookie: false,
+      hasToken: false,
+      hasBody: false,
+      hasSignature: false,
+      signatureMatches: false,
+      payloadValid: false,
+      payloadScope: "unknown",
+      scopeMatches: false,
+      expiresAtMs: null,
+      notExpired: false,
+      authenticated: false,
+      reason: "missing_cookie_header",
+    };
+  }
+
+  if (!cookies.has(cookieName)) {
+    return {
+      scope,
+      cookieName,
+      hasCookieHeader: true,
+      hasSessionCookie: false,
+      hasToken: false,
+      hasBody: false,
+      hasSignature: false,
+      signatureMatches: false,
+      payloadValid: false,
+      payloadScope: "unknown",
+      scopeMatches: false,
+      expiresAtMs: null,
+      notExpired: false,
+      authenticated: false,
+      reason: "missing_session_cookie",
+    };
+  }
+
+  if (!token) {
+    return {
+      scope,
+      cookieName,
+      hasCookieHeader: true,
+      hasSessionCookie: true,
+      hasToken: false,
+      hasBody: false,
+      hasSignature: false,
+      signatureMatches: false,
+      payloadValid: false,
+      payloadScope: "unknown",
+      scopeMatches: false,
+      expiresAtMs: null,
+      notExpired: false,
+      authenticated: false,
+      reason: "missing_token",
+    };
+  }
+
+  const [body, providedSignature] = token.split(".");
+  if (!body || !providedSignature) {
+    return {
+      scope,
+      cookieName,
+      hasCookieHeader: true,
+      hasSessionCookie: true,
+      hasToken: true,
+      hasBody: Boolean(body),
+      hasSignature: Boolean(providedSignature),
+      signatureMatches: false,
+      payloadValid: false,
+      payloadScope: "unknown",
+      scopeMatches: false,
+      expiresAtMs: null,
+      notExpired: false,
+      authenticated: false,
+      reason: "invalid_token_format",
+    };
+  }
+
+  const expectedSignature = sign(body);
+  const sameLength = providedSignature.length === expectedSignature.length;
+  const signatureMatches =
+    sameLength && crypto.timingSafeEqual(Buffer.from(providedSignature), Buffer.from(expectedSignature));
+
+  if (!signatureMatches) {
+    return {
+      scope,
+      cookieName,
+      hasCookieHeader: true,
+      hasSessionCookie: true,
+      hasToken: true,
+      hasBody: true,
+      hasSignature: true,
+      signatureMatches: false,
+      payloadValid: false,
+      payloadScope: "unknown",
+      scopeMatches: false,
+      expiresAtMs: null,
+      notExpired: false,
+      authenticated: false,
+      reason: "signature_mismatch",
+    };
+  }
+
+  try {
+    const payload = JSON.parse(base64UrlDecode(body)) as SessionPayload;
+    const expiresAtMs = payload.exp * 1000;
+    const notExpired = expiresAtMs > Date.now();
+    const scopeMatches = payload.scope === scope;
+    const authenticated = scopeMatches && notExpired;
+
+    return {
+      scope,
+      cookieName,
+      hasCookieHeader: true,
+      hasSessionCookie: true,
+      hasToken: true,
+      hasBody: true,
+      hasSignature: true,
+      signatureMatches: true,
+      payloadValid: true,
+      payloadScope: payload.scope,
+      scopeMatches,
+      expiresAtMs,
+      notExpired,
+      authenticated,
+      reason: authenticated ? "ok" : scopeMatches ? "expired" : "scope_mismatch",
+    };
+  } catch {
+    return {
+      scope,
+      cookieName,
+      hasCookieHeader: true,
+      hasSessionCookie: true,
+      hasToken: true,
+      hasBody: true,
+      hasSignature: true,
+      signatureMatches: true,
+      payloadValid: false,
+      payloadScope: "unknown",
+      scopeMatches: false,
+      expiresAtMs: null,
+      notExpired: false,
+      authenticated: false,
+      reason: "invalid_payload",
+    };
+  }
+}
+
+export function logSessionDebug(request: Request, label: string, debug: SessionValidationDebug) {
+  console.info(`[auth] ${label}`, {
+    method: request.method,
+    path: new URL(request.url).pathname,
+    origin: request.headers.get("origin"),
+    userAgent: request.headers.get("user-agent"),
+    ...debug,
+  });
 }
 
 export function getSessionFromRequest(request: Request, scope: SessionScope) {
-  const cookieHeader = request.headers.get("cookie");
-  const cookies = parseCookieHeader(cookieHeader);
-  const token = cookies.get(getCookieName(scope));
-  return verifySessionToken(token, scope);
+  return inspectSessionFromRequest(request, scope).authenticated;
 }
