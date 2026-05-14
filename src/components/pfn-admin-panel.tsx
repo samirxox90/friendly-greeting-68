@@ -137,11 +137,19 @@ export function PfnAdminPanel() {
     setTemplates((prev) => [...prev, { event_type: "TW", template_word: "", is_active: true }]);
   }
 
+  function removeTemplate(index: number) {
+    setTemplates((prev) => prev.filter((_, i) => i !== index));
+  }
+
   function addPattern() {
     setPatterns((prev) => [
       ...prev,
       { region: "SG", event_type: "TW", label: "New", pattern: "https://", sort_order: prev.length + 1, is_active: true },
     ]);
+  }
+
+  function removePattern(index: number) {
+    setPatterns((prev) => prev.filter((_, i) => i !== index));
   }
 
   if (!ok) {
@@ -164,7 +172,7 @@ export function PfnAdminPanel() {
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-6">
-      <h1 className="mb-4 text-3xl font-semibold">PFN Admin Panel</h1>
+      <h1 className="mb-4 text-3xl font-semibold">FF Admin Panel</h1>
       {panelError ? <p className="mb-3 text-sm text-destructive">{panelError}</p> : null}
       {panelMessage ? <p className="mb-3 text-sm text-primary">{panelMessage}</p> : null}
       <div className="grid gap-4 lg:grid-cols-2">
@@ -210,7 +218,10 @@ export function PfnAdminPanel() {
               <div key={`${item.id ?? "new"}-${index}`} className="grid grid-cols-3 gap-2">
                 <Input value={item.event_type} onChange={(e) => setTemplates((prev) => prev.map((t, i) => i === index ? { ...t, event_type: e.target.value as Template["event_type"] } : t))} />
                 <Input value={item.template_word} onChange={(e) => setTemplates((prev) => prev.map((t, i) => i === index ? { ...t, template_word: e.target.value } : t))} />
-                <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={item.is_active} onChange={(e) => setTemplates((prev) => prev.map((t, i) => i === index ? { ...t, is_active: e.target.checked } : t))} />Active</label>
+                <div className="flex items-center justify-between gap-2 text-sm">
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={item.is_active} onChange={(e) => setTemplates((prev) => prev.map((t, i) => i === index ? { ...t, is_active: e.target.checked } : t))} />Active</label>
+                  <Button type="button" variant="destructive" size="sm" onClick={() => removeTemplate(index)}>Delete</Button>
+                </div>
               </div>
             ))}
             <Button onClick={save}>Save Templates</Button>
@@ -233,7 +244,10 @@ export function PfnAdminPanel() {
                     <Input type="number" value={item.sort_order} onChange={(e) => setPatterns((prev) => prev.map((p, i) => i === index ? { ...p, sort_order: Number(e.target.value || 0) } : p))} />
                   </div>
                   <Input value={item.pattern} onChange={(e) => setPatterns((prev) => prev.map((p, i) => i === index ? { ...p, pattern: e.target.value } : p))} />
-                  <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={item.is_active} onChange={(e) => setPatterns((prev) => prev.map((p, i) => i === index ? { ...p, is_active: e.target.checked } : p))} />Active</label>
+                  <div className="flex items-center justify-between gap-2 text-sm">
+                    <label className="flex items-center gap-2"><input type="checkbox" checked={item.is_active} onChange={(e) => setPatterns((prev) => prev.map((p, i) => i === index ? { ...p, is_active: e.target.checked } : p))} />Active</label>
+                    <Button type="button" variant="destructive" size="sm" onClick={() => removePattern(index)}>Delete</Button>
+                  </div>
                 </div>
               ))}
             </div>
