@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicAppStatusRouteImport } from './routes/api/public/app/status'
 import { Route as ApiPublicAppLogoutRouteImport } from './routes/api/public/app/logout'
@@ -20,6 +21,11 @@ import { Route as ApiPublicAdminLoginRouteImport } from './routes/api/public/adm
 import { Route as ApiPublicAdminGenerateCodeRouteImport } from './routes/api/public/admin/generate-code'
 import { Route as ApiPublicAdminConfigRouteImport } from './routes/api/public/admin/config'
 
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -75,6 +81,7 @@ const ApiPublicAdminConfigRoute = ApiPublicAdminConfigRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/api/public/admin/config': typeof ApiPublicAdminConfigRoute
   '/api/public/admin/generate-code': typeof ApiPublicAdminGenerateCodeRoute
   '/api/public/admin/login': typeof ApiPublicAdminLoginRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/api/public/admin/config': typeof ApiPublicAdminConfigRoute
   '/api/public/admin/generate-code': typeof ApiPublicAdminGenerateCodeRoute
   '/api/public/admin/login': typeof ApiPublicAdminLoginRoute
@@ -100,6 +108,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/api/public/admin/config': typeof ApiPublicAdminConfigRoute
   '/api/public/admin/generate-code': typeof ApiPublicAdminGenerateCodeRoute
   '/api/public/admin/login': typeof ApiPublicAdminLoginRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/api/public/admin/config'
     | '/api/public/admin/generate-code'
     | '/api/public/admin/login'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/api/public/admin/config'
     | '/api/public/admin/generate-code'
     | '/api/public/admin/login'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/api/public/admin/config'
     | '/api/public/admin/generate-code'
     | '/api/public/admin/login'
@@ -151,6 +163,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   ApiPublicAdminConfigRoute: typeof ApiPublicAdminConfigRoute
   ApiPublicAdminGenerateCodeRoute: typeof ApiPublicAdminGenerateCodeRoute
   ApiPublicAdminLoginRoute: typeof ApiPublicAdminLoginRoute
@@ -164,6 +177,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -239,6 +259,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   ApiPublicAdminConfigRoute: ApiPublicAdminConfigRoute,
   ApiPublicAdminGenerateCodeRoute: ApiPublicAdminGenerateCodeRoute,
   ApiPublicAdminLoginRoute: ApiPublicAdminLoginRoute,
@@ -252,3 +273,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
