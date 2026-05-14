@@ -46,6 +46,9 @@ export function verifySessionToken(token: string | null | undefined, expectedSco
   if (!body || !providedSignature) return false;
 
   const expectedSignature = sign(body);
+  if (providedSignature.length !== expectedSignature.length) {
+    return false;
+  }
   if (!crypto.timingSafeEqual(Buffer.from(providedSignature), Buffer.from(expectedSignature))) {
     return false;
   }
