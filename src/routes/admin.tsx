@@ -5,8 +5,8 @@ export const Route = createFileRoute("/admin")({
   component: AdminRoute,
   head: () => ({
     meta: [
-      { title: "PFN Admin Panel" },
-      { name: "description", content: "Manage PFN finder templates, link patterns, and access codes." },
+      { title: "FF Admin Panel" },
+      { name: "description", content: "Manage FF finder templates, link patterns, and access codes." },
     ],
   }),
 });
