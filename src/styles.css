@@ -194,6 +194,16 @@
     animation: ff-title-shift 3.6s ease-in-out infinite;
     text-shadow: 0 0 26px color-mix(in oklab, var(--color-glow), transparent 68%);
   }
+
+  .ff-credit {
+    display: inline-block;
+    font-family: "Rajdhani", "Inter", ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: 0;
+    color: color-mix(in oklab, var(--color-foreground), var(--color-primary) 35%);
+    text-shadow: 0 0 10px color-mix(in oklab, var(--color-primary), transparent 65%),
+      0 0 22px color-mix(in oklab, var(--color-accent), transparent 72%);
+    animation: ff-credit-pulse 2.8s ease-in-out infinite;
+  }
 }
 
 @keyframes scanline-shift {
@@ -226,10 +236,23 @@
   }
 }
 
+@keyframes ff-credit-pulse {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.03);
+    filter: brightness(1.12);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .scanlines::after,
   .soft-enter,
-  .ff-title {
+  .ff-title,
+  .ff-credit {
     animation: none !important;
   }
 }

@@ -498,6 +498,10 @@ export function PfnAssetsFinder() {
           </Card>
         ) : null}
       </section>
+
+      <footer className="py-8 text-center">
+        <p className="ff-credit text-xl font-semibold md:text-2xl">Copyright Credit LEAKS OF FF</p>
+      </footer>
     </main>
   );
 }
