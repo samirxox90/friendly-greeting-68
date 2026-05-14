@@ -14,7 +14,120 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      access_codes: {
+        Row: {
+          code_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          revoked: boolean
+          scope: Database["public"]["Enums"]["access_scope"]
+          updated_at: string
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          revoked?: boolean
+          scope?: Database["public"]["Enums"]["access_scope"]
+          updated_at?: string
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          revoked?: boolean
+          scope?: Database["public"]["Enums"]["access_scope"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      app_settings: {
+        Row: {
+          created_at: string
+          key: string
+          updated_at: string
+          value_json: Json
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          updated_at?: string
+          value_json: Json
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          updated_at?: string
+          value_json?: Json
+        }
+        Relationships: []
+      }
+      asset_link_patterns: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          is_active: boolean
+          label: string
+          pattern: string
+          region: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          is_active?: boolean
+          label: string
+          pattern: string
+          region: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          pattern?: string
+          region?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sg_template_words: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          is_active: boolean
+          template_word: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          is_active?: boolean
+          template_word: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          is_active?: boolean
+          template_word?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +136,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      access_scope: "main" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +263,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      access_scope: ["main", "admin"],
+    },
   },
 } as const
