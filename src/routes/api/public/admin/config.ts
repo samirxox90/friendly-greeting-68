@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { getAdminConfig, saveAdminConfig } from "@/lib/assets.server";
-import { getSessionFromRequest } from "@/lib/session.server";
+import { inspectSessionFromRequest, logSessionDebug } from "@/lib/session.server";
 import { jsonResponse } from "@/lib/http.server";
 
 const configSchema = z.object({
@@ -32,7 +32,9 @@ export const Route = createFileRoute("/api/public/admin/config")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        if (!getSessionFromRequest(request, "admin")) {
+        const sessionDebug = inspectSessionFromRequest(request, "admin");
+        if (!sessionDebug.authenticated) {
+          logSessionDebug(request, "admin/config GET unauthorized", sessionDebug);
           return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
         }
 
@@ -40,7 +42,9 @@ export const Route = createFileRoute("/api/public/admin/config")({
         return jsonResponse({ ok: true, ...data });
       },
       PUT: async ({ request }) => {
-        if (!getSessionFromRequest(request, "admin")) {
+        const sessionDebug = inspectSessionFromRequest(request, "admin");
+        if (!sessionDebug.authenticated) {
+          logSessionDebug(request, "admin/config PUT unauthorized", sessionDebug);
           return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
         }
 
