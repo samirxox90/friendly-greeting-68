@@ -80,13 +80,17 @@ export function getCookieName(scope: SessionScope) {
 }
 
 export function createSessionCookie(scope: SessionScope, token: string, expiresAt: Date) {
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
-  return `${getCookieName(scope)}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Expires=${expiresAt.toUTCString()}${secure}`;
+  const isSecure = process.env.NODE_ENV === "production";
+  const secure = isSecure ? "; Secure" : "";
+  const sameSite = isSecure ? "None" : "Lax";
+  return `${getCookieName(scope)}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=${sameSite}; Expires=${expiresAt.toUTCString()}${secure}`;
 }
 
 export function clearSessionCookie(scope: SessionScope) {
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
-  return `${getCookieName(scope)}=; Path=/; HttpOnly; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT${secure}`;
+  const isSecure = process.env.NODE_ENV === "production";
+  const secure = isSecure ? "; Secure" : "";
+  const sameSite = isSecure ? "None" : "Lax";
+  return `${getCookieName(scope)}=; Path=/; HttpOnly; SameSite=${sameSite}; Expires=Thu, 01 Jan 1970 00:00:00 GMT${secure}`;
 }
 
 export function getSessionFromRequest(request: Request, scope: SessionScope) {
