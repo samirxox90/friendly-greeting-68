@@ -20,6 +20,12 @@ export const Route = createFileRoute("/api/public/admin/login")({
         }
 
         const token = createSessionToken("admin", validation.expiresAt);
+        console.info("[auth] admin/login success", {
+          method: request.method,
+          path: new URL(request.url).pathname,
+          origin: request.headers.get("origin"),
+          expiresAt: validation.expiresAt.toISOString(),
+        });
         return jsonResponse(
           { ok: true, expiresAt: validation.expiresAt.toISOString() },
           200,
