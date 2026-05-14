@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicAppStatusRouteImport } from './routes/api/public/app/status'
@@ -21,6 +22,11 @@ import { Route as ApiPublicAdminLoginRouteImport } from './routes/api/public/adm
 import { Route as ApiPublicAdminGenerateCodeRouteImport } from './routes/api/public/admin/generate-code'
 import { Route as ApiPublicAdminConfigRouteImport } from './routes/api/public/admin/config'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -82,6 +88,7 @@ const ApiPublicAdminConfigRoute = ApiPublicAdminConfigRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/admin/config': typeof ApiPublicAdminConfigRoute
   '/api/public/admin/generate-code': typeof ApiPublicAdminGenerateCodeRoute
   '/api/public/admin/login': typeof ApiPublicAdminLoginRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/admin/config': typeof ApiPublicAdminConfigRoute
   '/api/public/admin/generate-code': typeof ApiPublicAdminGenerateCodeRoute
   '/api/public/admin/login': typeof ApiPublicAdminLoginRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/admin/config': typeof ApiPublicAdminConfigRoute
   '/api/public/admin/generate-code': typeof ApiPublicAdminGenerateCodeRoute
   '/api/public/admin/login': typeof ApiPublicAdminLoginRoute
@@ -124,6 +133,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/sitemap.xml'
     | '/api/public/admin/config'
     | '/api/public/admin/generate-code'
     | '/api/public/admin/login'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/sitemap.xml'
     | '/api/public/admin/config'
     | '/api/public/admin/generate-code'
     | '/api/public/admin/login'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/sitemap.xml'
     | '/api/public/admin/config'
     | '/api/public/admin/generate-code'
     | '/api/public/admin/login'
@@ -164,6 +176,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiPublicAdminConfigRoute: typeof ApiPublicAdminConfigRoute
   ApiPublicAdminGenerateCodeRoute: typeof ApiPublicAdminGenerateCodeRoute
   ApiPublicAdminLoginRoute: typeof ApiPublicAdminLoginRoute
@@ -177,6 +190,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -260,6 +280,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiPublicAdminConfigRoute: ApiPublicAdminConfigRoute,
   ApiPublicAdminGenerateCodeRoute: ApiPublicAdminGenerateCodeRoute,
   ApiPublicAdminLoginRoute: ApiPublicAdminLoginRoute,
