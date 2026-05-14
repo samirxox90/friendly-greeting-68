@@ -14,6 +14,11 @@ import { Route as ApiPublicAppStatusRouteImport } from './routes/api/public/app/
 import { Route as ApiPublicAppLogoutRouteImport } from './routes/api/public/app/logout'
 import { Route as ApiPublicAppLoginRouteImport } from './routes/api/public/app/login'
 import { Route as ApiPublicAppGenerateLinksRouteImport } from './routes/api/public/app/generate-links'
+import { Route as ApiPublicAdminStatusRouteImport } from './routes/api/public/admin/status'
+import { Route as ApiPublicAdminLogoutRouteImport } from './routes/api/public/admin/logout'
+import { Route as ApiPublicAdminLoginRouteImport } from './routes/api/public/admin/login'
+import { Route as ApiPublicAdminGenerateCodeRouteImport } from './routes/api/public/admin/generate-code'
+import { Route as ApiPublicAdminConfigRouteImport } from './routes/api/public/admin/config'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,9 +46,40 @@ const ApiPublicAppGenerateLinksRoute =
     path: '/api/public/app/generate-links',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicAdminStatusRoute = ApiPublicAdminStatusRouteImport.update({
+  id: '/api/public/admin/status',
+  path: '/api/public/admin/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAdminLogoutRoute = ApiPublicAdminLogoutRouteImport.update({
+  id: '/api/public/admin/logout',
+  path: '/api/public/admin/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAdminLoginRoute = ApiPublicAdminLoginRouteImport.update({
+  id: '/api/public/admin/login',
+  path: '/api/public/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAdminGenerateCodeRoute =
+  ApiPublicAdminGenerateCodeRouteImport.update({
+    id: '/api/public/admin/generate-code',
+    path: '/api/public/admin/generate-code',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicAdminConfigRoute = ApiPublicAdminConfigRouteImport.update({
+  id: '/api/public/admin/config',
+  path: '/api/public/admin/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/admin/config': typeof ApiPublicAdminConfigRoute
+  '/api/public/admin/generate-code': typeof ApiPublicAdminGenerateCodeRoute
+  '/api/public/admin/login': typeof ApiPublicAdminLoginRoute
+  '/api/public/admin/logout': typeof ApiPublicAdminLogoutRoute
+  '/api/public/admin/status': typeof ApiPublicAdminStatusRoute
   '/api/public/app/generate-links': typeof ApiPublicAppGenerateLinksRoute
   '/api/public/app/login': typeof ApiPublicAppLoginRoute
   '/api/public/app/logout': typeof ApiPublicAppLogoutRoute
@@ -51,6 +87,11 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/admin/config': typeof ApiPublicAdminConfigRoute
+  '/api/public/admin/generate-code': typeof ApiPublicAdminGenerateCodeRoute
+  '/api/public/admin/login': typeof ApiPublicAdminLoginRoute
+  '/api/public/admin/logout': typeof ApiPublicAdminLogoutRoute
+  '/api/public/admin/status': typeof ApiPublicAdminStatusRoute
   '/api/public/app/generate-links': typeof ApiPublicAppGenerateLinksRoute
   '/api/public/app/login': typeof ApiPublicAppLoginRoute
   '/api/public/app/logout': typeof ApiPublicAppLogoutRoute
@@ -59,6 +100,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/admin/config': typeof ApiPublicAdminConfigRoute
+  '/api/public/admin/generate-code': typeof ApiPublicAdminGenerateCodeRoute
+  '/api/public/admin/login': typeof ApiPublicAdminLoginRoute
+  '/api/public/admin/logout': typeof ApiPublicAdminLogoutRoute
+  '/api/public/admin/status': typeof ApiPublicAdminStatusRoute
   '/api/public/app/generate-links': typeof ApiPublicAppGenerateLinksRoute
   '/api/public/app/login': typeof ApiPublicAppLoginRoute
   '/api/public/app/logout': typeof ApiPublicAppLogoutRoute
@@ -68,6 +114,11 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/api/public/admin/config'
+    | '/api/public/admin/generate-code'
+    | '/api/public/admin/login'
+    | '/api/public/admin/logout'
+    | '/api/public/admin/status'
     | '/api/public/app/generate-links'
     | '/api/public/app/login'
     | '/api/public/app/logout'
@@ -75,6 +126,11 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/api/public/admin/config'
+    | '/api/public/admin/generate-code'
+    | '/api/public/admin/login'
+    | '/api/public/admin/logout'
+    | '/api/public/admin/status'
     | '/api/public/app/generate-links'
     | '/api/public/app/login'
     | '/api/public/app/logout'
@@ -82,6 +138,11 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/api/public/admin/config'
+    | '/api/public/admin/generate-code'
+    | '/api/public/admin/login'
+    | '/api/public/admin/logout'
+    | '/api/public/admin/status'
     | '/api/public/app/generate-links'
     | '/api/public/app/login'
     | '/api/public/app/logout'
@@ -90,6 +151,11 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicAdminConfigRoute: typeof ApiPublicAdminConfigRoute
+  ApiPublicAdminGenerateCodeRoute: typeof ApiPublicAdminGenerateCodeRoute
+  ApiPublicAdminLoginRoute: typeof ApiPublicAdminLoginRoute
+  ApiPublicAdminLogoutRoute: typeof ApiPublicAdminLogoutRoute
+  ApiPublicAdminStatusRoute: typeof ApiPublicAdminStatusRoute
   ApiPublicAppGenerateLinksRoute: typeof ApiPublicAppGenerateLinksRoute
   ApiPublicAppLoginRoute: typeof ApiPublicAppLoginRoute
   ApiPublicAppLogoutRoute: typeof ApiPublicAppLogoutRoute
@@ -133,11 +199,51 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAppGenerateLinksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/admin/status': {
+      id: '/api/public/admin/status'
+      path: '/api/public/admin/status'
+      fullPath: '/api/public/admin/status'
+      preLoaderRoute: typeof ApiPublicAdminStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/admin/logout': {
+      id: '/api/public/admin/logout'
+      path: '/api/public/admin/logout'
+      fullPath: '/api/public/admin/logout'
+      preLoaderRoute: typeof ApiPublicAdminLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/admin/login': {
+      id: '/api/public/admin/login'
+      path: '/api/public/admin/login'
+      fullPath: '/api/public/admin/login'
+      preLoaderRoute: typeof ApiPublicAdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/admin/generate-code': {
+      id: '/api/public/admin/generate-code'
+      path: '/api/public/admin/generate-code'
+      fullPath: '/api/public/admin/generate-code'
+      preLoaderRoute: typeof ApiPublicAdminGenerateCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/admin/config': {
+      id: '/api/public/admin/config'
+      path: '/api/public/admin/config'
+      fullPath: '/api/public/admin/config'
+      preLoaderRoute: typeof ApiPublicAdminConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicAdminConfigRoute: ApiPublicAdminConfigRoute,
+  ApiPublicAdminGenerateCodeRoute: ApiPublicAdminGenerateCodeRoute,
+  ApiPublicAdminLoginRoute: ApiPublicAdminLoginRoute,
+  ApiPublicAdminLogoutRoute: ApiPublicAdminLogoutRoute,
+  ApiPublicAdminStatusRoute: ApiPublicAdminStatusRoute,
   ApiPublicAppGenerateLinksRoute: ApiPublicAppGenerateLinksRoute,
   ApiPublicAppLoginRoute: ApiPublicAppLoginRoute,
   ApiPublicAppLogoutRoute: ApiPublicAppLogoutRoute,
