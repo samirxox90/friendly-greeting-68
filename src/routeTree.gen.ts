@@ -10,33 +10,90 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicAppStatusRouteImport } from './routes/api/public/app/status'
+import { Route as ApiPublicAppLogoutRouteImport } from './routes/api/public/app/logout'
+import { Route as ApiPublicAppLoginRouteImport } from './routes/api/public/app/login'
+import { Route as ApiPublicAppGenerateLinksRouteImport } from './routes/api/public/app/generate-links'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAppStatusRoute = ApiPublicAppStatusRouteImport.update({
+  id: '/api/public/app/status',
+  path: '/api/public/app/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAppLogoutRoute = ApiPublicAppLogoutRouteImport.update({
+  id: '/api/public/app/logout',
+  path: '/api/public/app/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAppLoginRoute = ApiPublicAppLoginRouteImport.update({
+  id: '/api/public/app/login',
+  path: '/api/public/app/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAppGenerateLinksRoute =
+  ApiPublicAppGenerateLinksRouteImport.update({
+    id: '/api/public/app/generate-links',
+    path: '/api/public/app/generate-links',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/app/generate-links': typeof ApiPublicAppGenerateLinksRoute
+  '/api/public/app/login': typeof ApiPublicAppLoginRoute
+  '/api/public/app/logout': typeof ApiPublicAppLogoutRoute
+  '/api/public/app/status': typeof ApiPublicAppStatusRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/app/generate-links': typeof ApiPublicAppGenerateLinksRoute
+  '/api/public/app/login': typeof ApiPublicAppLoginRoute
+  '/api/public/app/logout': typeof ApiPublicAppLogoutRoute
+  '/api/public/app/status': typeof ApiPublicAppStatusRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/app/generate-links': typeof ApiPublicAppGenerateLinksRoute
+  '/api/public/app/login': typeof ApiPublicAppLoginRoute
+  '/api/public/app/logout': typeof ApiPublicAppLogoutRoute
+  '/api/public/app/status': typeof ApiPublicAppStatusRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/api/public/app/generate-links'
+    | '/api/public/app/login'
+    | '/api/public/app/logout'
+    | '/api/public/app/status'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/api/public/app/generate-links'
+    | '/api/public/app/login'
+    | '/api/public/app/logout'
+    | '/api/public/app/status'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/public/app/generate-links'
+    | '/api/public/app/login'
+    | '/api/public/app/logout'
+    | '/api/public/app/status'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicAppGenerateLinksRoute: typeof ApiPublicAppGenerateLinksRoute
+  ApiPublicAppLoginRoute: typeof ApiPublicAppLoginRoute
+  ApiPublicAppLogoutRoute: typeof ApiPublicAppLogoutRoute
+  ApiPublicAppStatusRoute: typeof ApiPublicAppStatusRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,12 +105,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/app/status': {
+      id: '/api/public/app/status'
+      path: '/api/public/app/status'
+      fullPath: '/api/public/app/status'
+      preLoaderRoute: typeof ApiPublicAppStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/app/logout': {
+      id: '/api/public/app/logout'
+      path: '/api/public/app/logout'
+      fullPath: '/api/public/app/logout'
+      preLoaderRoute: typeof ApiPublicAppLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/app/login': {
+      id: '/api/public/app/login'
+      path: '/api/public/app/login'
+      fullPath: '/api/public/app/login'
+      preLoaderRoute: typeof ApiPublicAppLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/app/generate-links': {
+      id: '/api/public/app/generate-links'
+      path: '/api/public/app/generate-links'
+      fullPath: '/api/public/app/generate-links'
+      preLoaderRoute: typeof ApiPublicAppGenerateLinksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicAppGenerateLinksRoute: ApiPublicAppGenerateLinksRoute,
+  ApiPublicAppLoginRoute: ApiPublicAppLoginRoute,
+  ApiPublicAppLogoutRoute: ApiPublicAppLogoutRoute,
+  ApiPublicAppStatusRoute: ApiPublicAppStatusRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
