@@ -176,6 +176,24 @@
   .soft-enter {
     animation: soft-enter 320ms ease-out;
   }
+
+  .ff-title {
+    position: relative;
+    display: inline-block;
+    background: linear-gradient(
+      120deg,
+      color-mix(in oklab, var(--color-foreground), transparent 5%),
+      color-mix(in oklab, var(--color-primary), white 14%),
+      color-mix(in oklab, var(--color-accent), white 18%),
+      color-mix(in oklab, var(--color-primary), transparent 12%)
+    );
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: ff-title-shift 3.6s ease-in-out infinite;
+    text-shadow: 0 0 26px color-mix(in oklab, var(--color-glow), transparent 68%);
+  }
 }
 
 @keyframes scanline-shift {
@@ -198,9 +216,20 @@
   }
 }
 
+@keyframes ff-title-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .scanlines::after,
-  .soft-enter {
+  .soft-enter,
+  .ff-title {
     animation: none !important;
   }
 }
