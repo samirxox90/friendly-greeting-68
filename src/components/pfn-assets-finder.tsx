@@ -88,6 +88,10 @@ export function PfnAssetsFinder() {
   const [errorText, setErrorText] = useState("");
   const [checkingMessage, setCheckingMessage] = useState("");
   const [checkingProgress, setCheckingProgress] = useState(0);
+  const [checkingStartedAt, setCheckingStartedAt] = useState<number | null>(null);
+  const [generatedCount, setGeneratedCount] = useState(0);
+  const [checkDurationMs, setCheckDurationMs] = useState(0);
+  const [totalDurationMs, setTotalDurationMs] = useState(0);
 
   const generateAbortRef = useRef<AbortController | null>(null);
   const progressTimerRef = useRef<number | null>(null);
@@ -105,6 +109,10 @@ export function PfnAssetsFinder() {
     }
   }
 
+  function formatSeconds(ms: number) {
+    return `${(ms / 1000).toFixed(2)}s`;
+  }
+
   useEffect(() => {
     return () => {
       clearProgressTimer();
@@ -118,6 +126,10 @@ export function PfnAssetsFinder() {
     setErrorText("");
     setCheckingMessage("");
     setCheckingProgress(0);
+    setCheckingStartedAt(null);
+    setGeneratedCount(0);
+    setCheckDurationMs(0);
+    setTotalDurationMs(0);
   }
 
   async function checkStatus() {
@@ -194,6 +206,11 @@ export function PfnAssetsFinder() {
     }
 
     setErrorText("");
+    setGeneratedCount(0);
+    setCheckDurationMs(0);
+    setTotalDurationMs(0);
+    const startedAt = Date.now();
+    setCheckingStartedAt(startedAt);
     setCheckingMessage(linkCheckEnabled ? "Checking links live..." : "Generating links...");
     setCheckingProgress(8);
     setLoading(true);
@@ -201,6 +218,12 @@ export function PfnAssetsFinder() {
 
     progressTimerRef.current = window.setInterval(() => {
       setCheckingProgress((prev) => (prev >= 92 ? prev : prev + 4));
+      const elapsedMs = Date.now() - startedAt;
+      setCheckingMessage(
+        linkCheckEnabled
+          ? `Checking links live... elapsed ${formatSeconds(elapsedMs)}`
+          : `Generating links... elapsed ${formatSeconds(elapsedMs)}`,
+      );
     }, 260);
 
     const controller = new AbortController();
@@ -223,22 +246,36 @@ export function PfnAssetsFinder() {
         }),
       });
 
-      const data = (await res.json()) as { ok: boolean; error?: string; links?: LinkItem[] };
+      const data = (await res.json()) as {
+        ok: boolean;
+        error?: string;
+        links?: LinkItem[];
+        generatedCount?: number;
+        checkDurationMs?: number;
+        totalDurationMs?: number;
+      };
       if (!res.ok || !data.ok) {
         clearProgressTimer();
         setCheckingProgress(0);
         setCheckingMessage("");
+        setCheckingStartedAt(null);
         setErrorText(data.error ?? "Generation failed");
         return;
       }
 
       setResults(data.links ?? []);
+      setGeneratedCount(data.generatedCount ?? data.links?.length ?? 0);
+      setCheckDurationMs(data.checkDurationMs ?? 0);
+      setTotalDurationMs(data.totalDurationMs ?? 0);
       clearProgressTimer();
       setCheckingProgress(100);
-      setCheckingMessage("Live checking complete.");
+      setCheckingMessage(
+        `Live checking complete in ${formatSeconds(data.checkDurationMs ?? 0)} (total ${formatSeconds(data.totalDurationMs ?? 0)}).`,
+      );
       window.setTimeout(() => {
         setCheckingMessage("");
         setCheckingProgress(0);
+        setCheckingStartedAt(null);
       }, 1000);
     } catch {
       clearProgressTimer();
@@ -246,10 +283,12 @@ export function PfnAssetsFinder() {
       if (wasCancelled) {
         setCheckingProgress(0);
         setCheckingMessage("Generation cancelled.");
+        setCheckingStartedAt(null);
         return;
       }
       setCheckingProgress(0);
       setCheckingMessage("");
+      setCheckingStartedAt(null);
       setErrorText("Network error while generating links.");
     } finally {
       generateAbortRef.current = null;
@@ -460,6 +499,14 @@ export function PfnAssetsFinder() {
             </Button>
             {checkingProgress > 0 ? <Progress value={checkingProgress} /> : null}
             {checkingMessage ? <p className="text-xs text-primary">{checkingMessage}</p> : null}
+            {checkingStartedAt && loading ? (
+              <p className="text-xs text-muted-foreground">Current run time: {formatSeconds(Date.now() - checkingStartedAt)}</p>
+            ) : null}
+            {generatedCount > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Generated: {generatedCount} · Checked: {visibleResults.length} working · Check time: {formatSeconds(checkDurationMs)}
+              </p>
+            ) : null}
             <p className="text-xs text-muted-foreground">
               Previews and status are shown below. Green = reachable.
             </p>
