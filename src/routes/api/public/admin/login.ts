@@ -29,7 +29,7 @@ export const Route = createFileRoute("/api/public/admin/login")({
         return jsonResponse(
           { ok: true, expiresAt: validation.expiresAt.toISOString() },
           200,
-          { "Set-Cookie": createSessionCookie("admin", token, validation.expiresAt) },
+          { "Set-Cookie": createSessionCookie("admin", token, validation.expiresAt, request) },
         );
       },
     },
