@@ -5,9 +5,9 @@ import { jsonResponse } from "@/lib/http.server";
 export const Route = createFileRoute("/api/public/app/logout")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
         return jsonResponse({ ok: true }, 200, {
-          "Set-Cookie": clearSessionCookie("main"),
+          "Set-Cookie": clearSessionCookie("main", request),
         });
       },
     },
