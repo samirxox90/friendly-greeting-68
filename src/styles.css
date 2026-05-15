@@ -199,10 +199,20 @@
     display: inline-block;
     font-family: "Rajdhani", "Inter", ui-sans-serif, system-ui, sans-serif;
     letter-spacing: 0;
-    color: color-mix(in oklab, var(--color-foreground), var(--color-primary) 35%);
-    text-shadow: 0 0 10px color-mix(in oklab, var(--color-primary), transparent 65%),
-      0 0 22px color-mix(in oklab, var(--color-accent), transparent 72%);
-    animation: ff-credit-pulse 2.8s ease-in-out infinite;
+    font-weight: 800;
+    background: linear-gradient(
+      130deg,
+      color-mix(in oklab, var(--color-foreground), white 5%),
+      color-mix(in oklab, var(--color-primary), white 20%),
+      color-mix(in oklab, var(--color-accent), white 20%)
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 12px color-mix(in oklab, var(--color-primary), transparent 62%),
+      0 0 30px color-mix(in oklab, var(--color-accent), transparent 70%);
+    animation: ff-credit-pulse 2.8s ease-in-out infinite, ff-title-shift 4.2s ease-in-out infinite;
   }
 }
 

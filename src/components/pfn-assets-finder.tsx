@@ -38,6 +38,9 @@ const REGION_OPTIONS: Array<{ value: Region; label: string }> = [
 
 const PRESETS: Record<string, { regions: Region[]; eventTypes: EventType[] }> = {
   ALL: { regions: ["SG", "NA", "EU"], eventTypes: ["TW", "FW", "DW", "O", "MS", "STORE"] },
+  SG_ALL: { regions: ["SG"], eventTypes: ["TW", "FW", "DW", "O", "MS", "STORE"] },
+  NA_ALL: { regions: ["NA"], eventTypes: ["TW", "FW", "DW", "O", "MS", "STORE"] },
+  EU_ALL: { regions: ["EU"], eventTypes: ["TW", "FW", "DW", "O", "MS", "STORE"] },
   SG_TW: { regions: ["SG"], eventTypes: ["TW"] },
   NA_TW: { regions: ["NA"], eventTypes: ["TW"] },
   EU_TW: { regions: ["EU"], eventTypes: ["TW"] },
@@ -46,6 +49,7 @@ const PRESETS: Record<string, { regions: Region[]; eventTypes: EventType[] }> = 
   ALL_DW: { regions: ["SG", "NA", "EU"], eventTypes: ["DW"] },
   ALL_O: { regions: ["SG", "NA", "EU"], eventTypes: ["O"] },
   ALL_MS: { regions: ["SG", "NA", "EU"], eventTypes: ["MS"] },
+  ALL_STORE: { regions: ["SG", "NA", "EU"], eventTypes: ["STORE"] },
 };
 
 function toWords(mode: "single" | "multiple", singleWord: string, multiWords: string) {
@@ -304,7 +308,6 @@ export function PfnAssetsFinder() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="ff-title text-3xl font-semibold tracking-tight text-foreground md:text-4xl">FF Assets Finder</h1>
-          <p className="text-sm text-muted-foreground">Generate working links with image previews, fast.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={() => applyPreset("ALL")}>
@@ -349,10 +352,18 @@ export function PfnAssetsFinder() {
             <div className="space-y-2">
               <p className="text-sm font-medium">Quick Filter Presets</p>
               <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={() => applyPreset("SG_ALL")}>All Types (SG)</Button>
+                <Button variant="outline" size="sm" onClick={() => applyPreset("NA_ALL")}>All Types (NA)</Button>
+                <Button variant="outline" size="sm" onClick={() => applyPreset("EU_ALL")}>All Types (EU)</Button>
                 <Button variant="outline" size="sm" onClick={() => applyPreset("SG_TW")}>Check Only TW (SG)</Button>
                 <Button variant="outline" size="sm" onClick={() => applyPreset("NA_TW")}>Check Only TW (NA)</Button>
                 <Button variant="outline" size="sm" onClick={() => applyPreset("EU_TW")}>Check Only TW (EU)</Button>
                 <Button variant="outline" size="sm" onClick={() => applyPreset("ALL_TW")}>Check All Regions TW</Button>
+                <Button variant="outline" size="sm" onClick={() => applyPreset("ALL_FW")}>Check All Regions FW</Button>
+                <Button variant="outline" size="sm" onClick={() => applyPreset("ALL_DW")}>Check All Regions DW</Button>
+                <Button variant="outline" size="sm" onClick={() => applyPreset("ALL_O")}>Check All Regions O</Button>
+                <Button variant="outline" size="sm" onClick={() => applyPreset("ALL_MS")}>Check All Regions MS</Button>
+                <Button variant="outline" size="sm" onClick={() => applyPreset("ALL_STORE")}>Check All Regions STORE</Button>
               </div>
             </div>
 
@@ -500,7 +511,7 @@ export function PfnAssetsFinder() {
       </section>
 
       <footer className="py-8 text-center">
-        <p className="ff-credit text-xl font-semibold md:text-2xl">Copyright Credit LEAKS OF FF</p>
+        <p className="ff-credit text-xl font-semibold md:text-2xl">©️LEAKS OF FF</p>
       </footer>
     </main>
   );
