@@ -13,6 +13,7 @@ export const Route = createFileRoute("/api/public/app/generate-links")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const requestStart = Date.now();
         const sessionDebug = inspectSessionFromRequest(request, "main");
         if (!sessionDebug.authenticated) {
           logSessionDebug(request, "app/generate-links unauthorized", sessionDebug);
@@ -26,10 +27,18 @@ export const Route = createFileRoute("/api/public/app/generate-links")({
 
         const generated = await generateLinks(parsed.data.input);
         if (!parsed.data.checkLinks) {
-          return jsonResponse({ ok: true, links: generated.links });
+          return jsonResponse({
+            ok: true,
+            links: generated.links,
+            generatedCount: generated.links.length,
+            checkDurationMs: 0,
+            totalDurationMs: Date.now() - requestStart,
+          });
         }
 
+        const checkStart = Date.now();
         const checked = await checkLinks(generated.links.map((item) => item.url));
+        const checkDurationMs = Date.now() - checkStart;
         const statusByUrl = new Map(checked.map((item) => [item.url, item]));
 
         const merged = generated.links.map((item) => ({
@@ -37,7 +46,13 @@ export const Route = createFileRoute("/api/public/app/generate-links")({
           check: statusByUrl.get(item.url) ?? { url: item.url, ok: false, status: null },
         }));
 
-        return jsonResponse({ ok: true, links: merged });
+        return jsonResponse({
+          ok: true,
+          links: merged,
+          generatedCount: generated.links.length,
+          checkDurationMs,
+          totalDurationMs: Date.now() - requestStart,
+        });
       },
     },
   },
