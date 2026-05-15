@@ -267,10 +267,12 @@ export function PfnAssetsFinder() {
       setGeneratedCount(data.generatedCount ?? data.links?.length ?? 0);
       setCheckDurationMs(data.checkDurationMs ?? 0);
       setTotalDurationMs(data.totalDurationMs ?? 0);
+      const checkedCount = data.links?.length ?? 0;
+      const workingCount = (data.links ?? []).filter((item) => item.check?.ok).length;
       clearProgressTimer();
       setCheckingProgress(100);
       setCheckingMessage(
-        `Live checking complete in ${formatSeconds(data.checkDurationMs ?? 0)} (total ${formatSeconds(data.totalDurationMs ?? 0)}).`,
+        `Checked ${checkedCount} links in ${formatSeconds(data.checkDurationMs ?? 0)} · Working ${workingCount} · Total ${formatSeconds(data.totalDurationMs ?? 0)}`,
       );
       window.setTimeout(() => {
         setCheckingMessage("");
@@ -500,11 +502,13 @@ export function PfnAssetsFinder() {
             {checkingProgress > 0 ? <Progress value={checkingProgress} /> : null}
             {checkingMessage ? <p className="text-xs text-primary">{checkingMessage}</p> : null}
             {checkingStartedAt && loading ? (
-              <p className="text-xs text-muted-foreground">Current run time: {formatSeconds(Date.now() - checkingStartedAt)}</p>
+              <p className="text-xs text-muted-foreground">
+                Current run time: {formatSeconds(Date.now() - checkingStartedAt)}
+              </p>
             ) : null}
             {generatedCount > 0 ? (
               <p className="text-xs text-muted-foreground">
-                Generated: {generatedCount} · Checked: {visibleResults.length} working · Check time: {formatSeconds(checkDurationMs)}
+                Generated: {generatedCount} · Checked: {visibleResults.length} working · Check time: {formatSeconds(checkDurationMs)} · Total: {formatSeconds(totalDurationMs)}
               </p>
             ) : null}
             <p className="text-xs text-muted-foreground">
