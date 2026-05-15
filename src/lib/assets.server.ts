@@ -6,7 +6,7 @@ export const regionSchema = z.enum(["SG", "NA", "EU"]);
 export const eventTypeSchema = z.enum(["TW", "FW", "DW", "O", "MS", "STORE"]);
 
 export const generateLinksInputSchema = z.object({
-  words: z.array(z.string().min(1).max(80)).min(1).max(200),
+  words: z.array(z.string().trim().min(1).max(80)).min(1).max(1200),
   regions: z.array(regionSchema).min(1),
   eventTypes: z.array(eventTypeSchema).min(1),
   numberRange: z.object({
