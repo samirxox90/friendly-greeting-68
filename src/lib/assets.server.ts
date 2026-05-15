@@ -317,8 +317,8 @@ export async function generateLinks(input: GenerateLinksInput) {
 export async function checkLinks(urls: string[]) {
   const sanitizedUrls = Array.from(new Set(urls.filter((url) => url.startsWith("https://")))).slice(0, 1500);
 
-  const timeoutMs = 5500;
-  const workerLimit = 25;
+  const timeoutMs = 4200;
+  const workerLimit = 40;
   const results: Array<{ url: string; ok: boolean; status: number | null }> = [];
 
   let cursor = 0;
@@ -335,17 +335,23 @@ export async function checkLinks(urls: string[]) {
       try {
         const head = await fetch(url, {
           method: "HEAD",
+          cache: "no-store",
           signal: controller.signal,
         });
 
-        if (head.ok || head.status === 403 || head.status === 405) {
+        if (head.ok || head.status === 403 || head.status === 405 || head.status === 429) {
           results.push({ url, ok: true, status: head.status });
         } else {
           const getRes = await fetch(url, {
             method: "GET",
+            cache: "no-store",
             signal: controller.signal,
           });
-          results.push({ url, ok: getRes.ok, status: getRes.status });
+          results.push({
+            url,
+            ok: getRes.ok || getRes.status === 403 || getRes.status === 429,
+            status: getRes.status,
+          });
         }
       } catch {
         results.push({ url, ok: false, status: null });
