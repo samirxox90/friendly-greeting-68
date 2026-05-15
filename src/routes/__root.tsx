@@ -74,10 +74,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "FF Assets Finder" },
       { name: "description", content: "FF Assets Finder" },
-      { property: "og:title", content: "FF Assets Finder" },
-      { property: "og:description", content: "FF Assets Finder" },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
     links: [
       {
