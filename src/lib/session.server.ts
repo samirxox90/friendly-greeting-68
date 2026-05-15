@@ -106,8 +106,23 @@ export function getCookieName(scope: SessionScope) {
   return scope === "admin" ? ADMIN_COOKIE : MAIN_COOKIE;
 }
 
-export function createSessionCookie(scope: SessionScope, token: string, expiresAt: Date) {
-  const isSecure = process.env.NODE_ENV === "production";
+function shouldUseCrossSiteCookieMode(request?: Request) {
+  if (!request) return process.env.NODE_ENV === "production";
+
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.toLowerCase();
+  if (forwardedProto) {
+    return forwardedProto.includes("https");
+  }
+
+  try {
+    return new URL(request.url).protocol === "https:";
+  } catch {
+    return process.env.NODE_ENV === "production";
+  }
+}
+
+export function createSessionCookie(scope: SessionScope, token: string, expiresAt: Date, request?: Request) {
+  const isSecure = shouldUseCrossSiteCookieMode(request);
   const secure = isSecure ? "; Secure" : "";
   const sameSite = isSecure ? "None" : "Lax";
   const partitioned = isSecure ? "; Partitioned" : "";
@@ -115,8 +130,8 @@ export function createSessionCookie(scope: SessionScope, token: string, expiresA
   return `${getCookieName(scope)}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=${sameSite}; Max-Age=${maxAge}; Expires=${expiresAt.toUTCString()}${secure}${partitioned}`;
 }
 
-export function clearSessionCookie(scope: SessionScope) {
-  const isSecure = process.env.NODE_ENV === "production";
+export function clearSessionCookie(scope: SessionScope, request?: Request) {
+  const isSecure = shouldUseCrossSiteCookieMode(request);
   const secure = isSecure ? "; Secure" : "";
   const sameSite = isSecure ? "None" : "Lax";
   const partitioned = isSecure ? "; Partitioned" : "";
