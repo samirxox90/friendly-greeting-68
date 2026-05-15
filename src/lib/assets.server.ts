@@ -315,49 +315,65 @@ export async function generateLinks(input: GenerateLinksInput) {
 }
 
 export async function checkLinks(urls: string[]) {
-  const sanitizedUrls = Array.from(new Set(urls.filter((url) => url.startsWith("https://")))).slice(0, 1500);
+  const sanitizedUrls = Array.from(new Set(urls.filter((url) => url.startsWith("https://"))));
 
-  const timeoutMs = 4200;
-  const workerLimit = 40;
+  const timeoutMs = 2800;
+  const workerLimit = 64;
+  const retryAttempts = 1;
   const results: Array<{ url: string; ok: boolean; status: number | null }> = [];
 
   let cursor = 0;
+
+  async function fetchWithTimeout(url: string, method: "HEAD" | "GET") {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      return await fetch(url, {
+        method,
+        cache: "no-store",
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  async function checkOneUrl(url: string) {
+    for (let attempt = 0; attempt <= retryAttempts; attempt += 1) {
+      try {
+        const head = await fetchWithTimeout(url, "HEAD");
+
+        if (head.ok || head.status === 403 || head.status === 429) {
+          return { url, ok: true, status: head.status };
+        }
+
+        if (head.status === 405 || head.status === 501) {
+          const getRes = await fetchWithTimeout(url, "GET");
+          return {
+            url,
+            ok: getRes.ok || getRes.status === 403 || getRes.status === 429,
+            status: getRes.status,
+          };
+        }
+
+        return { url, ok: false, status: head.status };
+      } catch {
+        if (attempt === retryAttempts) {
+          return { url, ok: false, status: null };
+        }
+      }
+    }
+
+    return { url, ok: false, status: null };
+  }
 
   async function worker() {
     while (cursor < sanitizedUrls.length) {
       const currentIndex = cursor;
       cursor += 1;
       const url = sanitizedUrls[currentIndex];
-
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
-      try {
-        const head = await fetch(url, {
-          method: "HEAD",
-          cache: "no-store",
-          signal: controller.signal,
-        });
-
-        if (head.ok || head.status === 403 || head.status === 405 || head.status === 429) {
-          results.push({ url, ok: true, status: head.status });
-        } else {
-          const getRes = await fetch(url, {
-            method: "GET",
-            cache: "no-store",
-            signal: controller.signal,
-          });
-          results.push({
-            url,
-            ok: getRes.ok || getRes.status === 403 || getRes.status === 429,
-            status: getRes.status,
-          });
-        }
-      } catch {
-        results.push({ url, ok: false, status: null });
-      } finally {
-        clearTimeout(timeout);
-      }
+      results.push(await checkOneUrl(url));
     }
   }
 
