@@ -533,6 +533,28 @@ export function PfnAssetsFinder() {
               </label>
             </div>
 
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Check Format</p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={linkFormat === "all" ? "default" : "outline"}
+                  onClick={() => setLinkFormat("all")}
+                >
+                  All Formats
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={linkFormat === "tabOnly" ? "default" : "outline"}
+                  onClick={() => setLinkFormat("tabOnly")}
+                >
+                  TAB Only
+                </Button>
+              </div>
+            </div>
+
             {errorText ? <p className="text-sm text-destructive">{errorText}</p> : null}
 
             <Button onClick={generate} disabled={loading} className="w-full glow-outline">
@@ -572,6 +594,7 @@ export function PfnAssetsFinder() {
                 Generated: {generatedCount} · Checked: {visibleResults.length} working · Check time: {formatSeconds(checkDurationMs)} · Total: {formatSeconds(totalDurationMs)}
               </p>
             ) : null}
+            <p className="text-xs text-muted-foreground">Current filter: {linkFormat === "tabOnly" ? "TAB format only" : "All formats"}</p>
             <p className="text-xs text-muted-foreground">
               Previews and status are shown below. Green = reachable.
             </p>
