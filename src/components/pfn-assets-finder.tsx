@@ -229,31 +229,22 @@ export function PfnAssetsFinder() {
     setTotalDurationMs(0);
     const startedAt = Date.now();
     setCheckingStartedAt(startedAt);
-    setCheckingMessage(linkCheckEnabled ? "Checking links live..." : "Generating links...");
+    setCheckingMessage(linkCheckEnabled ? "Starting live checking..." : "Generating links...");
     setCheckingProgress(8);
     setLoading(true);
-    clearProgressTimer();
-
-    progressTimerRef.current = window.setInterval(() => {
-      setCheckingProgress((prev) => (prev >= 92 ? prev : prev + 4));
-      const elapsedMs = Date.now() - startedAt;
-      setCheckingMessage(
-        linkCheckEnabled
-          ? `Checking links live... elapsed ${formatSeconds(elapsedMs)}`
-          : `Generating links... elapsed ${formatSeconds(elapsedMs)}`,
-      );
-    }, 260);
 
     const controller = new AbortController();
     generateAbortRef.current = controller;
 
     try {
-      const res = await fetch("/api/public/app/generate-links", {
+      const startRes = await fetch("/api/public/app/generate-links", {
         method: "POST",
         credentials: "include",
         signal: controller.signal,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          mode: "async",
+          linkFormat,
           checkLinks: linkCheckEnabled,
           input: {
             words,
@@ -264,41 +255,93 @@ export function PfnAssetsFinder() {
         }),
       });
 
-      const data = (await res.json()) as {
+      const startData = (await startRes.json()) as {
         ok: boolean;
         error?: string;
-        links?: LinkItem[];
-        generatedCount?: number;
-        checkDurationMs?: number;
-        totalDurationMs?: number;
+        jobId?: string;
       };
-      if (!res.ok || !data.ok) {
-        clearProgressTimer();
+
+      if (!startRes.ok || !startData.ok || !startData.jobId) {
         setCheckingProgress(0);
         setCheckingMessage("");
         setCheckingStartedAt(null);
-        setErrorText(data.error ?? "Generation failed");
+        setErrorText(startData.error ?? "Generation failed");
         return;
       }
 
-      setResults(data.links ?? []);
-      setGeneratedCount(data.generatedCount ?? data.links?.length ?? 0);
-      setCheckDurationMs(data.checkDurationMs ?? 0);
-      setTotalDurationMs(data.totalDurationMs ?? 0);
-      const checkedCount = data.links?.length ?? 0;
-      const workingCount = (data.links ?? []).filter((item) => item.check?.ok).length;
-      clearProgressTimer();
-      setCheckingProgress(100);
-      setCheckingMessage(
-        `Checked ${checkedCount} links in ${formatSeconds(data.checkDurationMs ?? 0)} · Working ${workingCount} · Total ${formatSeconds(data.totalDurationMs ?? 0)}`,
-      );
-      window.setTimeout(() => {
-        setCheckingMessage("");
-        setCheckingProgress(0);
-        setCheckingStartedAt(null);
-      }, 1000);
+      let completed = false;
+      while (!completed) {
+        await waitForNextPoll(2200, controller.signal);
+
+        const pollRes = await fetch(`/api/public/app/generate-links?jobId=${encodeURIComponent(startData.jobId)}`, {
+          method: "GET",
+          credentials: "include",
+          signal: controller.signal,
+        });
+
+        const data = (await pollRes.json()) as {
+          ok: boolean;
+          error?: string;
+          status?: "running" | "done" | "error";
+          processed?: number;
+          total?: number;
+          elapsedMs?: number;
+          estimatedRemainingMs?: number | null;
+          links?: LinkItem[];
+          generatedCount?: number;
+          checkDurationMs?: number;
+          totalDurationMs?: number;
+        };
+
+        if (!pollRes.ok || !data.ok) {
+          setCheckingProgress(0);
+          setCheckingMessage("");
+          setCheckingStartedAt(null);
+          setErrorText(data.error ?? "Generation failed");
+          return;
+        }
+
+        const processed = data.processed ?? 0;
+        const total = data.total ?? 0;
+        const elapsedMs = data.elapsedMs ?? Date.now() - startedAt;
+        const ratio = total > 0 ? processed / total : 0;
+        const progress = Math.max(8, Math.min(98, Math.round(ratio * 100)));
+
+        setCheckingProgress(data.status === "done" ? 100 : progress);
+        setCheckingMessage(
+          linkCheckEnabled
+            ? `Checked ${processed}/${total || "..."} · Elapsed ${formatSeconds(elapsedMs)} · ETA ${formatEta(data.estimatedRemainingMs ?? null)}`
+            : `Generating links... elapsed ${formatSeconds(elapsedMs)}`,
+        );
+
+        if (data.status === "running") continue;
+
+        if (data.status === "error") {
+          setCheckingProgress(0);
+          setCheckingMessage("");
+          setCheckingStartedAt(null);
+          setErrorText(data.error ?? "Generation failed");
+          return;
+        }
+
+        completed = true;
+        setResults(data.links ?? []);
+        setGeneratedCount(data.generatedCount ?? data.links?.length ?? 0);
+        setCheckDurationMs(data.checkDurationMs ?? 0);
+        setTotalDurationMs(data.totalDurationMs ?? 0);
+        const checkedCount = data.links?.length ?? 0;
+        const workingCount = (data.links ?? []).filter((item) => item.check?.ok).length;
+        setCheckingProgress(100);
+        setCheckingMessage(
+          `Checked ${checkedCount} links in ${formatSeconds(data.checkDurationMs ?? 0)} · Working ${workingCount} · Total ${formatSeconds(data.totalDurationMs ?? 0)}`,
+        );
+        window.setTimeout(() => {
+          setCheckingMessage("");
+          setCheckingProgress(0);
+          setCheckingStartedAt(null);
+        }, 1200);
+      }
     } catch {
-      clearProgressTimer();
       const wasCancelled = controller.signal.aborted;
       if (wasCancelled) {
         setCheckingProgress(0);
