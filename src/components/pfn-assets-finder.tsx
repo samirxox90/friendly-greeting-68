@@ -82,6 +82,7 @@ export function PfnAssetsFinder() {
   const [numberFrom, setNumberFrom] = useState(1);
   const [numberTo, setNumberTo] = useState(7);
   const [linkCheckEnabled, setLinkCheckEnabled] = useState(true);
+  const [linkFormat, setLinkFormat] = useState<"all" | "tabOnly">("all");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<LinkItem[]>([]);
   const [copied, setCopied] = useState(false);
@@ -94,7 +95,6 @@ export function PfnAssetsFinder() {
   const [totalDurationMs, setTotalDurationMs] = useState(0);
 
   const generateAbortRef = useRef<AbortController | null>(null);
-  const progressTimerRef = useRef<number | null>(null);
 
   const wordsPreview = useMemo(() => toWords(mode, singleWord, multipleWords), [mode, singleWord, multipleWords]);
   const visibleResults = useMemo(
@@ -102,20 +102,38 @@ export function PfnAssetsFinder() {
     [results],
   );
 
-  function clearProgressTimer() {
-    if (progressTimerRef.current) {
-      window.clearInterval(progressTimerRef.current);
-      progressTimerRef.current = null;
-    }
-  }
-
   function formatSeconds(ms: number) {
     return `${(ms / 1000).toFixed(2)}s`;
   }
 
+  function formatEta(ms: number | null) {
+    if (ms === null || !Number.isFinite(ms) || ms < 0) return "--";
+    return formatSeconds(ms);
+  }
+
+  async function waitForNextPoll(ms: number, signal: AbortSignal) {
+    await new Promise<void>((resolve, reject) => {
+      const timeout = window.setTimeout(() => {
+        cleanup();
+        resolve();
+      }, ms);
+
+      const onAbort = () => {
+        cleanup();
+        reject(new DOMException("Aborted", "AbortError"));
+      };
+
+      const cleanup = () => {
+        window.clearTimeout(timeout);
+        signal.removeEventListener("abort", onAbort);
+      };
+
+      signal.addEventListener("abort", onAbort, { once: true });
+    });
+  }
+
   useEffect(() => {
     return () => {
-      clearProgressTimer();
       generateAbortRef.current?.abort();
     };
   }, []);
@@ -211,31 +229,22 @@ export function PfnAssetsFinder() {
     setTotalDurationMs(0);
     const startedAt = Date.now();
     setCheckingStartedAt(startedAt);
-    setCheckingMessage(linkCheckEnabled ? "Checking links live..." : "Generating links...");
+    setCheckingMessage(linkCheckEnabled ? "Starting live checking..." : "Generating links...");
     setCheckingProgress(8);
     setLoading(true);
-    clearProgressTimer();
-
-    progressTimerRef.current = window.setInterval(() => {
-      setCheckingProgress((prev) => (prev >= 92 ? prev : prev + 4));
-      const elapsedMs = Date.now() - startedAt;
-      setCheckingMessage(
-        linkCheckEnabled
-          ? `Checking links live... elapsed ${formatSeconds(elapsedMs)}`
-          : `Generating links... elapsed ${formatSeconds(elapsedMs)}`,
-      );
-    }, 260);
 
     const controller = new AbortController();
     generateAbortRef.current = controller;
 
     try {
-      const res = await fetch("/api/public/app/generate-links", {
+      const startRes = await fetch("/api/public/app/generate-links", {
         method: "POST",
         credentials: "include",
         signal: controller.signal,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          mode: "async",
+          linkFormat,
           checkLinks: linkCheckEnabled,
           input: {
             words,
@@ -246,41 +255,93 @@ export function PfnAssetsFinder() {
         }),
       });
 
-      const data = (await res.json()) as {
+      const startData = (await startRes.json()) as {
         ok: boolean;
         error?: string;
-        links?: LinkItem[];
-        generatedCount?: number;
-        checkDurationMs?: number;
-        totalDurationMs?: number;
+        jobId?: string;
       };
-      if (!res.ok || !data.ok) {
-        clearProgressTimer();
+
+      if (!startRes.ok || !startData.ok || !startData.jobId) {
         setCheckingProgress(0);
         setCheckingMessage("");
         setCheckingStartedAt(null);
-        setErrorText(data.error ?? "Generation failed");
+        setErrorText(startData.error ?? "Generation failed");
         return;
       }
 
-      setResults(data.links ?? []);
-      setGeneratedCount(data.generatedCount ?? data.links?.length ?? 0);
-      setCheckDurationMs(data.checkDurationMs ?? 0);
-      setTotalDurationMs(data.totalDurationMs ?? 0);
-      const checkedCount = data.links?.length ?? 0;
-      const workingCount = (data.links ?? []).filter((item) => item.check?.ok).length;
-      clearProgressTimer();
-      setCheckingProgress(100);
-      setCheckingMessage(
-        `Checked ${checkedCount} links in ${formatSeconds(data.checkDurationMs ?? 0)} · Working ${workingCount} · Total ${formatSeconds(data.totalDurationMs ?? 0)}`,
-      );
-      window.setTimeout(() => {
-        setCheckingMessage("");
-        setCheckingProgress(0);
-        setCheckingStartedAt(null);
-      }, 1000);
+      let completed = false;
+      while (!completed) {
+        await waitForNextPoll(2200, controller.signal);
+
+        const pollRes = await fetch(`/api/public/app/generate-links?jobId=${encodeURIComponent(startData.jobId)}`, {
+          method: "GET",
+          credentials: "include",
+          signal: controller.signal,
+        });
+
+        const data = (await pollRes.json()) as {
+          ok: boolean;
+          error?: string;
+          status?: "running" | "done" | "error";
+          processed?: number;
+          total?: number;
+          elapsedMs?: number;
+          estimatedRemainingMs?: number | null;
+          links?: LinkItem[];
+          generatedCount?: number;
+          checkDurationMs?: number;
+          totalDurationMs?: number;
+        };
+
+        if (!pollRes.ok || !data.ok) {
+          setCheckingProgress(0);
+          setCheckingMessage("");
+          setCheckingStartedAt(null);
+          setErrorText(data.error ?? "Generation failed");
+          return;
+        }
+
+        const processed = data.processed ?? 0;
+        const total = data.total ?? 0;
+        const elapsedMs = data.elapsedMs ?? Date.now() - startedAt;
+        const ratio = total > 0 ? processed / total : 0;
+        const progress = Math.max(8, Math.min(98, Math.round(ratio * 100)));
+
+        setCheckingProgress(data.status === "done" ? 100 : progress);
+        setCheckingMessage(
+          linkCheckEnabled
+            ? `Checked ${processed}/${total || "..."} · Elapsed ${formatSeconds(elapsedMs)} · ETA ${formatEta(data.estimatedRemainingMs ?? null)}`
+            : `Generating links... elapsed ${formatSeconds(elapsedMs)}`,
+        );
+
+        if (data.status === "running") continue;
+
+        if (data.status === "error") {
+          setCheckingProgress(0);
+          setCheckingMessage("");
+          setCheckingStartedAt(null);
+          setErrorText(data.error ?? "Generation failed");
+          return;
+        }
+
+        completed = true;
+        setResults(data.links ?? []);
+        setGeneratedCount(data.generatedCount ?? data.links?.length ?? 0);
+        setCheckDurationMs(data.checkDurationMs ?? 0);
+        setTotalDurationMs(data.totalDurationMs ?? 0);
+        const checkedCount = data.links?.length ?? 0;
+        const workingCount = (data.links ?? []).filter((item) => item.check?.ok).length;
+        setCheckingProgress(100);
+        setCheckingMessage(
+          `Checked ${checkedCount} links in ${formatSeconds(data.checkDurationMs ?? 0)} · Working ${workingCount} · Total ${formatSeconds(data.totalDurationMs ?? 0)}`,
+        );
+        window.setTimeout(() => {
+          setCheckingMessage("");
+          setCheckingProgress(0);
+          setCheckingStartedAt(null);
+        }, 1200);
+      }
     } catch {
-      clearProgressTimer();
       const wasCancelled = controller.signal.aborted;
       if (wasCancelled) {
         setCheckingProgress(0);
@@ -472,6 +533,28 @@ export function PfnAssetsFinder() {
               </label>
             </div>
 
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Check Format</p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={linkFormat === "all" ? "default" : "outline"}
+                  onClick={() => setLinkFormat("all")}
+                >
+                  All Formats
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={linkFormat === "tabOnly" ? "default" : "outline"}
+                  onClick={() => setLinkFormat("tabOnly")}
+                >
+                  TAB Only
+                </Button>
+              </div>
+            </div>
+
             {errorText ? <p className="text-sm text-destructive">{errorText}</p> : null}
 
             <Button onClick={generate} disabled={loading} className="w-full glow-outline">
@@ -511,6 +594,7 @@ export function PfnAssetsFinder() {
                 Generated: {generatedCount} · Checked: {visibleResults.length} working · Check time: {formatSeconds(checkDurationMs)} · Total: {formatSeconds(totalDurationMs)}
               </p>
             ) : null}
+            <p className="text-xs text-muted-foreground">Current filter: {linkFormat === "tabOnly" ? "TAB format only" : "All formats"}</p>
             <p className="text-xs text-muted-foreground">
               Previews and status are shown below. Green = reachable.
             </p>
