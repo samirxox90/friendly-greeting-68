@@ -7,6 +7,7 @@ import { jsonResponse } from "@/lib/http.server";
 const schema = z.object({
   input: generateLinksInputSchema,
   checkLinks: z.boolean().default(true),
+  linkFormat: z.enum(["all", "tabOnly"]).default("all"),
 });
 
 export const Route = createFileRoute("/api/public/app/generate-links")({
@@ -26,22 +27,30 @@ export const Route = createFileRoute("/api/public/app/generate-links")({
         }
 
         const generated = await generateLinks(parsed.data.input);
+        const filteredLinks =
+          parsed.data.linkFormat === "tabOnly"
+            ? generated.links.filter((item) => {
+                const source = `${item.label} ${item.url} ${item.eventType}`.toLowerCase();
+                return source.includes("tab");
+              })
+            : generated.links;
+
         if (!parsed.data.checkLinks) {
           return jsonResponse({
             ok: true,
-            links: generated.links,
-            generatedCount: generated.links.length,
+            links: filteredLinks,
+            generatedCount: filteredLinks.length,
             checkDurationMs: 0,
             totalDurationMs: Date.now() - requestStart,
           });
         }
 
         const checkStart = Date.now();
-        const checked = await checkLinks(generated.links.map((item) => item.url));
+        const checked = await checkLinks(filteredLinks.map((item) => item.url));
         const checkDurationMs = Date.now() - checkStart;
         const statusByUrl = new Map(checked.map((item) => [item.url, item]));
 
-        const merged = generated.links.map((item) => ({
+        const merged = filteredLinks.map((item) => ({
           ...item,
           check: statusByUrl.get(item.url) ?? { url: item.url, ok: false, status: null },
         }));
@@ -49,7 +58,7 @@ export const Route = createFileRoute("/api/public/app/generate-links")({
         return jsonResponse({
           ok: true,
           links: merged,
-          generatedCount: generated.links.length,
+          generatedCount: filteredLinks.length,
           checkDurationMs,
           totalDurationMs: Date.now() - requestStart,
         });
