@@ -82,6 +82,7 @@ export function PfnAssetsFinder() {
   const [numberFrom, setNumberFrom] = useState(1);
   const [numberTo, setNumberTo] = useState(7);
   const [linkCheckEnabled, setLinkCheckEnabled] = useState(true);
+  const [linkFormat, setLinkFormat] = useState<"all" | "tabOnly">("all");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<LinkItem[]>([]);
   const [copied, setCopied] = useState(false);
@@ -94,7 +95,6 @@ export function PfnAssetsFinder() {
   const [totalDurationMs, setTotalDurationMs] = useState(0);
 
   const generateAbortRef = useRef<AbortController | null>(null);
-  const progressTimerRef = useRef<number | null>(null);
 
   const wordsPreview = useMemo(() => toWords(mode, singleWord, multipleWords), [mode, singleWord, multipleWords]);
   const visibleResults = useMemo(
@@ -102,20 +102,38 @@ export function PfnAssetsFinder() {
     [results],
   );
 
-  function clearProgressTimer() {
-    if (progressTimerRef.current) {
-      window.clearInterval(progressTimerRef.current);
-      progressTimerRef.current = null;
-    }
-  }
-
   function formatSeconds(ms: number) {
     return `${(ms / 1000).toFixed(2)}s`;
   }
 
+  function formatEta(ms: number | null) {
+    if (ms === null || !Number.isFinite(ms) || ms < 0) return "--";
+    return formatSeconds(ms);
+  }
+
+  async function waitForNextPoll(ms: number, signal: AbortSignal) {
+    await new Promise<void>((resolve, reject) => {
+      const timeout = window.setTimeout(() => {
+        cleanup();
+        resolve();
+      }, ms);
+
+      const onAbort = () => {
+        cleanup();
+        reject(new DOMException("Aborted", "AbortError"));
+      };
+
+      const cleanup = () => {
+        window.clearTimeout(timeout);
+        signal.removeEventListener("abort", onAbort);
+      };
+
+      signal.addEventListener("abort", onAbort, { once: true });
+    });
+  }
+
   useEffect(() => {
     return () => {
-      clearProgressTimer();
       generateAbortRef.current?.abort();
     };
   }, []);
