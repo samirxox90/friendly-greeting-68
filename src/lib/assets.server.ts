@@ -314,13 +314,18 @@ export async function generateLinks(input: GenerateLinksInput) {
   return { links };
 }
 
-export async function checkLinks(urls: string[]) {
+export async function checkLinks(
+  urls: string[],
+  options?: { onProgress?: (progress: { processed: number; total: number }) => void },
+) {
   const sanitizedUrls = Array.from(new Set(urls.filter((url) => url.startsWith("https://"))));
 
   const timeoutMs = 2800;
   const workerLimit = 64;
   const retryAttempts = 1;
   const results: Array<{ url: string; ok: boolean; status: number | null }> = [];
+  const total = sanitizedUrls.length;
+  let processed = 0;
 
   let cursor = 0;
 
@@ -374,6 +379,8 @@ export async function checkLinks(urls: string[]) {
       cursor += 1;
       const url = sanitizedUrls[currentIndex];
       results.push(await checkOneUrl(url));
+      processed += 1;
+      options?.onProgress?.({ processed, total });
     }
   }
 
